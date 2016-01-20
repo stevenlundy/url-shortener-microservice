@@ -6,15 +6,24 @@ var sites = {};
 var short_ids = [];
 var counter = 1;
 
-app.get('/new/:url', function(req, res) {
-  if(!sites[req.params.url]) {
-    sites[req.params.url] = counter;
-    short_ids[counter++] = req.params.url;
+app.get('/new/*', function(req, res) {
+  var path = req.path;
+  var url = path.slice('/new/'.length);
+  var urlPattern = /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+  if(urlPattern.test(url)){
+    if(!sites[url]) {
+      sites[url] = counter;
+      short_ids[counter++] = url;
+    }
+    res.send({
+      original_url: url,
+      short_url: 'http://' + req.headers.host + '/' + sites[url]
+    })
+  } else {
+    res.send({
+      error: 'URL invalid'
+    });
   }
-  res.send({
-    original_url: 'req.params.url',
-    short_url: sites[req.params.url]
-  })
 });
 
 app.get('/:short_id', function(req, res) {
