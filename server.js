@@ -1,11 +1,9 @@
 var express = require('express');
 var db = require('./db');
 var port = process.env.PORT || 3000;
+var mongo = require('mongodb');
 
 var app = express();
-var sites = {};
-var short_ids = [];
-var counter = 1;
 
 app.get('/new/*', function(req, res) {
   var path = req.path;
@@ -13,13 +11,29 @@ app.get('/new/*', function(req, res) {
   var url = path.slice('/new/'.length);
   var urlPattern = /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
   if(urlPattern.test(url) || allow){
-    if(!sites[url]) {
-      sites[url] = counter;
-      short_ids[counter++] = url;
-    }
-    res.send({
-      original_url: url,
-      short_url: 'http://' + req.headers.host + '/' + sites[url]
+    var collection = db.get().collection('urls');
+    collection.find({ url: url }).toArray(function(err, results) {
+      if(err) {
+        res.send(err);
+      } else {
+        if(results.length) {
+          res.send({
+            original_url: url,
+            short_url: 'http://' + req.headers.host + '/' + results[0]._id
+          });
+        } else {
+          collection.insert({ url: url }, function(err, result) {
+            if(err) {
+              res.send(err);
+            } else {
+              res.send({
+                original_url: url,
+                short_url: 'http://' + req.headers.host + '/' + result.insertedIds[0]
+              });
+            }
+          })
+        }
+      }
     })
   } else {
     res.send({
@@ -29,13 +43,24 @@ app.get('/new/*', function(req, res) {
 });
 
 app.get('/:short_id', function(req, res) {
-  if(short_ids[req.params.short_id]) {
-    res.send('redirecting to ' + short_ids[req.params.short_id]);
-  } else {
-    res.send({
-      error: 'No short url found for given input'
-    });
-  }
+  var collection = db.get().collection('urls');
+  collection.find({ _id: mongo.ObjectId(req.params.short_id) }).toArray(function(err, results) {
+    if(err) {
+      res.send(err);
+    } else {
+      if(results.length) {
+        res.send({
+          original_url: results[0].url,
+        });
+      } else {
+        res.send({
+          results: results,
+          id: req.params.short_id,
+          error: 'No short url found for given input'
+        });
+      }
+    }
+  });
 });
 
 db.connect('mongodb://localhost:27017/url-shortener', function(err) {
