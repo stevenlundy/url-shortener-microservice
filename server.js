@@ -1,4 +1,5 @@
 var express = require('express');
+var db = require('./db');
 var port = process.env.PORT || 3000;
 
 var app = express();
@@ -37,6 +38,13 @@ app.get('/:short_id', function(req, res) {
   }
 });
 
-app.listen(port, function() {
-  console.log('listening on port ' + port);
+db.connect('mongodb://localhost:27017/url-shortener', function(err) {
+  if (err) {
+    console.log('Unable to connect to Mongo.');
+    process.exit(1);
+  } else {
+    app.listen(port, function() {
+      console.log('listening on port ' + port);
+    });
+  }
 });
