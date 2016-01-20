@@ -9,7 +9,7 @@ module.exports.addUrl = function(req, res) {
     models.getId(url).then(function(id) {
       res.send({
         original_url: url,
-        short_url: 'http://' + req.headers.host + '/' + id
+        short_url: 'http://' + req.headers.host + '/' + id.toString(36)
       });
     }).catch(function(err) {
       res.send(err);
@@ -22,7 +22,8 @@ module.exports.addUrl = function(req, res) {
 };
 
 module.exports.redirectToUrl = function(req, res) {
-  models.getUrl(req.params.short_id).then(function(url) {
+  var id = parseInt(req.params.short_id, 36);
+  models.getUrl(id).then(function(url) {
     if(url) {
       res.redirect(url);
     } else {
