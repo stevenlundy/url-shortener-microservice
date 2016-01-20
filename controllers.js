@@ -24,9 +24,7 @@ module.exports.addUrl = function(req, res) {
 module.exports.redirectToUrl = function(req, res) {
   models.getUrl(req.params.short_id).then(function(url) {
     if(url) {
-      res.send({
-        original_url: url,
-      });
+      res.redirect(url);
     } else {
       res.send({
         error: 'No short url found for given input'
