@@ -8,9 +8,10 @@ var counter = 1;
 
 app.get('/new/*', function(req, res) {
   var path = req.path;
+  var allow = req.query.allow;
   var url = path.slice('/new/'.length);
   var urlPattern = /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-  if(urlPattern.test(url)){
+  if(urlPattern.test(url) || allow){
     if(!sites[url]) {
       sites[url] = counter;
       short_ids[counter++] = url;
