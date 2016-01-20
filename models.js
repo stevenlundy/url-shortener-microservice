@@ -1,4 +1,5 @@
 var db = require('./db');
+var mongo = require('mongodb');
 
 module.exports.getId = function(url) {
   var collection = db.get().collection('urls');
@@ -27,3 +28,18 @@ module.exports.addUrl = function(url) {
     });
   });
 };
+
+module.exports.getUrl = function(id) {
+  var collection = db.get().collection('urls');
+  return new Promise(function (resolve, reject) {
+    collection.find({ _id: mongo.ObjectId(id) }).toArray(function(err, results) {
+      if(err) {
+        reject(err);
+      } else if(results.length) {
+        resolve(results[0].url);
+      } else {
+        resolve();
+      }
+    });
+  });
+}

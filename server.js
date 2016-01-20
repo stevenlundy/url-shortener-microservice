@@ -28,23 +28,18 @@ app.get('/new/*', function(req, res) {
 });
 
 app.get('/:short_id', function(req, res) {
-  var collection = db.get().collection('urls');
-  collection.find({ _id: mongo.ObjectId(req.params.short_id) }).toArray(function(err, results) {
-    if(err) {
-      res.send(err);
+  models.getUrl(req.params.short_id).then(function(url) {
+    if(url) {
+      res.send({
+        original_url: results[0].url,
+      });
     } else {
-      if(results.length) {
-        res.send({
-          original_url: results[0].url,
-        });
-      } else {
-        res.send({
-          results: results,
-          id: req.params.short_id,
-          error: 'No short url found for given input'
-        });
-      }
+      res.send({
+        error: 'No short url found for given input'
+      });
     }
+  }).catch(function(err) {
+    res.send(err);
   });
 });
 
